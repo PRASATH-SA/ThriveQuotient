@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team | Thrive Quotient</title>
+    <meta name="keywords" content="ikigai,ThriveQuotient,Thrive,Quotient">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta name="description" content="Finding an students passion,profession and mission to make them a purposeful person in life.">
+</head>
+<body>
+    <style>
+        *{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color:white;
+        }
+        body{
+            background-color: black;
+            margin:0;
+            scroll-behavior: smooth;
+        }
+        .pdfReader{
+            height: 100vh;
+            width:100%;
+            z-index: -1000;
+        }
+        nav>ul>li>a{
+            text-decoration: none;
+            color:white;
+        }
+        nav>ul>li{
+            list-style: none;
+            display: inline-block;
+            align-items: center;
+            font-weight:bold;
+            color:white;
+            cursor:pointer;
+            text-shadow: 1px 2px 2px red;
+            margin: 0px 10px 0px 10px;
+            z-index: 1000;
+        }
+        nav{
+            width: 100%;
+            text-align: center;
+            transition:2s ease-in-out;
+            /* background-image:linear-gradient(30deg,rgb(220, 220, 170),rgb(147, 147, 216)); */
+            /* animation-timing-function: ease-in-out; */
+            z-index: -1000;
+        }
+        nav>.box{
+            position: fixed;
+            transform: translate(10%,18%);
+            filter: blur(0.5px);
+            z-index: -1000;
+            content: "";
+            border-radius: 10px;
+            width:80%;
+            border: 1px solid black;
+            height:40px;
+            animation:back 5s linear infinite;
+            box-shadow: 1px 2px 2px yellow;
+        }
+        ul{
+            align-items: center;
+            display: inline-block;
+            text-align: center;
+        }
+        @keyframes back {
+            from{background-image:linear-gradient(30deg,rgb(248, 248, 8),rgb(255, 85, 0));}
+            to{background-image:linear-gradient(90deg,rgb(226, 226, 128),rgb(114, 114, 233));}
+            /* 100%{background-image:linear-gradient(30deg,rgb(255, 255, 15),rgb(0, 0, 243));} */
+        }
+        h1,p{
+            text-align: center;
+        }
+        .home{
+            margin-left: 0px;
+        }
+    </style>
+    <nav>
+        <div class="box"></div>
+        <ul>
+            <li class="home"><a href="index.html">Home</a></li>
+            <li class="team"><a href="team.html">Team</a></li>
+            <li class="about"><a href="about.html">About</a></li>
+        </ul>
+    </nav>
+    <h1>Naangadhaan</h1>
+    <p>Eppovumae Naangadhaan!...</p>
+</body>
+</html>
