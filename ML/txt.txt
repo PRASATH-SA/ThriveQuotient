@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ikigai Prototype</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #141E30, #243B55);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      max-width: 600px;
+      margin: auto;
+      gap: 10px;
+    }
+
+    input, button {
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    input {
+      width: 100%;
+    }
+
+    button {
+      background: #00C9FF;
+      color: black;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #92FE9D;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ikigai Prototype</h1>
+  <p>Fill in the four elements of Ikigai and let the ML model suggest insights.</p>
+
+  <div class="container">
+    <input type="text" id="love" placeholder="What do you love?">
+    <input type="text" id="goodAt" placeholder="What are you good at?">
+    <input type="text" id="worldNeeds" placeholder="What does the world need?">
+    <input type="text" id="paidFor" placeholder="What can you be paid for?">
+    <button onclick="analyze()">Find My Ikigai</button>
+  </div>
+
+  <div class="result" id="result">
+    Your Ikigai insights will appear here.
+  </div>
+
+  <!-- ML library -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
+
+  <script>
+    // Simple ML-like word similarity using fake embeddings
+    async function analyze() {
+      const love = document.getElementById('love').value.trim();
+      const goodAt = document.getElementById('goodAt').value.trim();
+      const worldNeeds = document.getElementById('worldNeeds').value.trim();
+      const paidFor = document.getElementById('paidFor').value.trim();
+      const resultDiv = document.getElementById('result');
+
+      if (!love || !goodAt || !worldNeeds || !paidFor) {
+        resultDiv.innerHTML = "⚠️ Please fill all fields!";
+        return;
+      }
+
+      // Convert words into vector embeddings (simplified numerical representation)
+      function textToVector(text) {
+        return text.toLowerCase().split("")
+          .map(ch => ch.charCodeAt(0) % 10); // crude encoding
+      }
+
+      function similarity(vec1, vec2) {
+        const minLen = Math.min(vec1.length, vec2.length);
+        let score = 0;
+        for (let i = 0; i < minLen; i++) {
+          score += (10 - Math.abs(vec1[i] - vec2[i]));
+        }
+        return score / minLen;
+      }
+
+      // Generate vectors
+      const v1 = textToVector(love);
+      const v2 = textToVector(goodAt);
+      const v3 = textToVector(worldNeeds);
+      const v4 = textToVector(paidFor);
+
+      // Calculate overlaps
+      const passion = similarity(v1, v2);
+      const mission = similarity(v1, v3);
+      const vocation = similarity(v3, v4);
+      const profession = similarity(v2, v4);
+
+      // Final Ikigai Score (average)
+      const ikigaiScore = ((passion + mission + vocation + profession) / 4).toFixed(2);
+
+      resultDiv.innerHTML = `
+        <h3>Your Ikigai Insights:</h3>
+        ❤️ Passion (Love ∩ Good At): ${passion.toFixed(2)}<br>
+        🌍 Mission (Love ∩ World Needs): ${mission.toFixed(2)}<br>
+        💼 Vocation (World Needs ∩ Paid For): ${vocation.toFixed(2)}<br>
+        🧑‍💻 Profession (Good At ∩ Paid For): ${profession.toFixed(2)}<br><br>
+        ⭐ Overall Ikigai Score: <b>${ikigaiScore}</b>
+      `;
+    }
+  </script>
+</body>
+</html>
+
+

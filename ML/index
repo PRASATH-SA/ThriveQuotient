@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikigai AI + Market Fit</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin:0; padding:0;
+    background: linear-gradient(135deg,#141E30,#243B55);
+    color:#fff;
+    scroll-behavior: smooth;
+}
+h1,h2 {text-align:center; margin:10px 0;}
+section {
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:40px 20px;
+    opacity:0;
+    transform:translateY(50px);
+    transition: all 0.8s ease-out;
+}
+section.visible {opacity:1; transform:translateY(0);}
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    border-radius:20px;
+    padding:30px;
+    max-width:600px; width:90%;
+    margin:20px auto;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+.tags {display:flex; flex-wrap:wrap; gap:5px; margin:10px 0;}
+.tag {background:rgba(255,255,255,0.2); padding:5px 10px; border-radius:8px; cursor:pointer;}
+.tag.selected {background:#00C9FF; color:black;}
+button {padding:12px; width:100%; border-radius:10px; border:none; background:#00C9FF; color:black; font-weight:bold; cursor:pointer;}
+button:hover {background:#92FE9D;}
+#chartDiv {width:100%; max-width:500px; margin:auto;}
+.result {margin-top:20px; background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; text-align:left;}
+input[type=range]{width:100%; margin:10px 0;}
+select {width:100%; padding:10px; margin:10px 0; border-radius:8px; border:none; background:rgba(255,255,255,0.2); color:#fff;}
+.skill-card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 15px auto;
+  max-width: 400px;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.skill-card a {
+  color: #00C9FF;
+  font-weight: bold;
+  text-decoration: none;
+}
+.skill-card a:hover { color: #92FE9D; }
+.roadmap {display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-top:20px;}
+.roadmap-card {background:rgba(255,255,255,0.1); backdrop-filter:blur(15px); padding:15px; border-radius:15px; min-width:150px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="bg" style="position:fixed;  width:100%; height: 100vh; background-position: center; background-image: url('bg.jpg');""></div>
+<section class="visible">
+<div class="card">
+<h1>Thrive Quotient</h1>
+<button onclick="scrollNext(this)">Find my Ikigai</button>
+
+</div>
+</section>
+
+<h1>Ikigai Self-Discovery + Market Fit</h1>
+
+<section>
+  <div class="card">
+    <h2>🌟 Joy & Passion</h2>
+    
+    <div class="question">
+      <p>1. What activities make you lose track of time completely?</p>
+      <div id="loveTags1" class="tags"></div>
+    </div>
+
+    <div class="question">
+      <p>2. If money was not a concern, what would you spend your days doing?</p>
+      <div id="loveTags2" class="tags"></div>
+    </div>
+
+    <div class="question">
+      <p>3. Which hobbies or childhood dreams still excite you today?</p>
+      <div id="loveTags3" class="tags"></div>
+    </div>
+
+    <div class="question">
+      <p>4. When was the last time you felt truly alive and energized? What were you doing?</p>
+      <input type="text" id="loveInput4" placeholder="Type your answer..." style="width:100%; padding:10px; border-radius:8px; border:none; margin-top:5px; background:rgba(255,255,255,0.2); color:#fff;">
+    </div>
+
+    <div class="question">
+      <p>5. What topics or activities make you want to learn more, even without external push?</p>
+      <div id="loveTags5" class="tags"></div>
+    </div>
+
+    <p>Joy Level:</p>
+    <input type="range" id="joySlider" min="1" max="10" value="5">
+    <button onclick="scrollNext(this)">Next</button>
+  </div>
+</section>
+
+<!-- Strengths -->
+<section>
+<div class="card">
+<h2>&#128170; Strengths</h2>
+<p>Select your skills:</p>
+<div id="skillsTags" class="tags"></div>
+<p>Confidence Level:</p>
+<input type="range" id="skillSlider" min="1" max="10" value="5">
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Contribution & Impact -->
+<section>
+<div class="card">
+<h2>🌍 Contribution & Impact</h2>
+<p>Select causes you care about:</p>
+<div id="causeTags" class="tags"></div>
+<p>Audience:</p>
+<select id="audience">
+<option value="children">Children</option>
+<option value="elderly">Elderly</option>
+<option value="students">Students</option>
+<option value="entrepreneurs">Entrepreneurs</option>
+<option value="society">Society</option>
+</select>
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Value & Career -->
+<section>
+<div class="card">
+<h2>💰 Value & Career</h2>
+<p>Select job roles/industries that attract you:</p>
+<div id="roleTags" class="tags"></div>
+<p>Interest Level:</p>
+<input type="range" id="interestSlider" min="1" max="10" value="5">
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Values & Lifestyle -->
+<section>
+<div class="card">
+<h2>🧭 Values & Lifestyle</h2>
+<p>Select your core values:</p>
+<div id="valueTags" class="tags"></div>
+<p>Importance Level:</p>
+<input type="range" id="valueSlider" min="1" max="10" value="5">
+<button onclick="analyze()">Analyze Ikigai</button>
+</div>
+</section>
+
+<!-- Radar Chart & Recommendations -->
+<section>
+<div class="card">
+<h2>Your Ikigai Radar</h2>
+<div id="chartDiv"><canvas id="radarChart"></canvas></div>
+<h2>Goal Roadmap & Skill Gaps</h2>
+<div class="roadmap" id="roadmap"></div>
+<div id="recommendations"></div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let model;
+async function loadModel(){ model = await use.load(); console.log("TF.js Model Loaded"); }
+loadModel();
+
+// Scroll
+const sections=document.querySelectorAll('section');
+function scrollNext(btn){
+  const next = btn.closest('section').nextElementSibling;
+  if(next) window.scrollTo({top:next.offsetTop,behavior:'smooth'});
+}
+
+// Tags creation
+function createTags(containerId, items){
+  const container=document.getElementById(containerId);
+  items.forEach(item=>{
+    const t=document.createElement('div');
+    t.className='tag'; t.innerText=item;
+    t.onclick=()=>t.classList.toggle('selected');
+    container.appendChild(t);
+  });
+}
+
+createTags('loveTags1',['Coding','Painting','Gaming','Teaching','Designing','Mentoring']);
+createTags('loveTags2',['Writing Stories','Traveling','Building Apps','Helping Others']);
+createTags('loveTags3',['Robotics','Music','Drawing','Puzzles','Storytelling']);
+createTags('loveTags5',['AI','Psychology','Fitness','Photography','Entrepreneurship']);
+
+createTags('skillsTags1',['Fixing Tech Issues','Giving Advice','Organizing Events','Creative Ideas']);
+createTags('skillsTags2',['Explaining Concepts','Coding','Designing','Public Speaking','Analyzing Numbers']);
+createTags('skillsTags3',['Programming','Music','Writing','Problem Solving']);
+
+
+createTags('loveTags',['Reading','Gaming','Coding','Music','Travel','AI']);
+createTags('skillsTags',['JavaScript','Python','AI','Design','Marketing','Management']);
+createTags('causeTags',['Environment','Education','Health','Technology','Social Justice']);
+createTags('roleTags',['Developer','Designer','Teacher','Marketer','Entrepreneur']);
+createTags('valueTags',['Growth','Freedom','Honesty','Respect','Creativity']);
+
+// Scroll fade-in
+window.addEventListener('scroll',()=>{
+  const scrollPos = window.scrollY + window.innerHeight*0.7;
+  sections.forEach(sec=>{ if(scrollPos>sec.offsetTop) sec.classList.add('visible'); });
+});
+
+// Cosine similarity
+function cosineSimilarity(vecA,vecB){
+  const dot = tf.tidy(()=>tf.sum(tf.mul(vecA,vecB)).arraySync());
+  const normA = tf.tidy(()=>tf.norm(vecA).arraySync());
+  const normB = tf.tidy(()=>tf.norm(vecB).arraySync());
+  return dot/(normA*normB);
+}
+
+// Fetch market skills fallback
+async function fetchMarketSkills() {
+  const query = "stars:>1000"; // top repos
+  const url = `https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=10`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.items.map(repo => repo.name);
+  } catch (err) {
+    console.log("GitHub API failed, using fallback");
+    return ["React","Node.js","AI","Python","Machine Learning"];
+  }
+}
+
+
+// Generate YouTube links
+function generateYouTubeLinks(skills){
+  return skills.map(skill=>{
+    const query=encodeURIComponent(skill+" tutorial");
+    return `<div class="skill-card"><h3>${skill}</h3><a href="https://www.youtube.com/results?search_query=${query}" target="_blank">Watch Tutorials</a></div>`;
+  }).join("");
+}
+
+// Analyze Ikigai
+async function analyze(){
+  if(!model){ alert("Model loading..."); return; }
+  const rec=document.getElementById("recommendations");
+  const roadmapDiv=document.getElementById("roadmap");
+
+  const love = [
+    ...document.querySelectorAll('#loveTags1 .selected'),
+    ...document.querySelectorAll('#loveTags2 .selected'),
+    ...document.querySelectorAll('#loveTags3 .selected'),
+    document.getElementById('loveInput4').value,
+    ...document.querySelectorAll('#loveTags5 .selected')
+  ].map(t => t.innerText || t);
+
+  const skills=[...document.querySelectorAll('#skillsTags .selected')].map(t=>t.innerText);
+  const causes=[...document.querySelectorAll('#causeTags .selected')].map(t=>t.innerText);
+  const roles=[...document.querySelectorAll('#roleTags .selected')].map(t=>t.innerText);
+  const values=[...document.querySelectorAll('#valueTags .selected')].map(t=>t.innerText);
+  if(!love.length || !skills.length || !causes.length || !roles.length || !values.length){
+    rec.innerHTML="⚠️ Select at least one option in each section"; return;
+  }
+
+  const marketSkills = await fetchMarketSkills();
+  const sentences=[...love,...skills,...causes,...roles,...values,...marketSkills];
+  const embeddings=await model.embed(sentences);
+
+  const userVecs = embeddings.slice([0,0],[love.length+skills.length+causes.length+roles.length+values.length,-1]);
+  const marketVecs = embeddings.slice([love.length+skills.length+causes.length+roles.length+values.length,0],[-1,-1]);
+
+  function getMaxSim(userVec){
+    let maxSim=0;
+    for(let i=0;i<marketVecs.shape[0];i++){
+      const sim=cosineSimilarity(userVec, marketVecs.slice([i,0],[1,-1]));
+      if(sim>maxSim) maxSim=sim;
+    }
+    return maxSim;
+  }
+
+  const vocationScore=Math.round(getMaxSim(userVecs)*10);
+  const passionScore=document.getElementById('joySlider').value;
+  const missionScore=7;
+  const professionScore=document.getElementById('skillSlider').value;
+
+  // Radar chart
+  const ctx=document.getElementById("radarChart");
+  new Chart(ctx,{type:'radar',data:{labels:['Passion','Mission','Vocation','Profession'],datasets:[{label:"Ikigai Scores",data:[passionScore,missionScore,vocationScore,professionScore],backgroundColor:'rgba(0,200,255,0.3)',borderColor:'#00C9FF',pointBackgroundColor:'#fff'}]},options:{scales:{r:{min:0,max:10}}}});
+
+  // Determine missing skills
+  const selectedSkills=[...skills,...roles];
+  const missingSkills=marketSkills.filter(skill=>!selectedSkills.includes(skill)).slice(0,5);
+
+  // Display roadmap
+  roadmapDiv.innerHTML="";
+  missingSkills.forEach(skill=>{
+    const card=document.createElement('div');
+    card.className='roadmap-card';
+    card.innerHTML=`<h4>Learn ${skill}</h4><p>Gap Skill</p>`;
+    roadmapDiv.appendChild(card);
+  });
+
+  // Display recommended skills with YouTube
+  rec.innerHTML="<h2>Recommended Skills + Tutorials</h2>"+generateYouTubeLinks(missingSkills);
+
+  // Scroll to radar chart
+  const chartSection=document.getElementById("chartDiv").closest('section');
+  window.scrollTo({top: chartSection.offsetTop, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

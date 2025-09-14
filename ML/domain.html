@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Your Interest</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 30px;
+      width: 350px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .option {
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .option.selected {
+      border-color: #00bfff;
+      background: rgba(0, 191, 255, 0.2);
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      background: #00bfff;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Select Your Interest (Max 2)</h2>
+    <div class="options" id="options">
+      <div class="option"data-value="Technology">💻 Technology</div>
+      <div class="option"data-value="Medicine">🩺 Medicine</div>
+      <div class="option"data-value="Teaching">📚 Teaching</div>
+      <div class="option"data-value="Art">🎨 Art</div>
+      <div class="option"data-value="Business">💼 Business</div>
+      <div class="option"data-value="Science">🔬 Science</div>
+      <div class="option"data-value="Sports">🏅 Sports</div>
+      <div class="option"data-value="Music">🎵 Music</div>
+    <button id="continueBtn" disabled>Continue</button>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+  <script>
+    const options = document.querySelectorAll(".option");
+    const continueBtn = document.getElementById("continueBtn");
+    let selected = [];
+
+    options.forEach(opt => {
+      opt.addEventListener("click", () => {
+        const value = opt.textContent;
+
+        if (selected.includes(value)) {
+          // deselect
+          selected = selected.filter(item => item !== value);
+          opt.classList.remove("selected");
+        } else {
+          if (selected.length < 2) {
+            selected.push(value);
+            opt.classList.add("selected");
+          } else {
+            alert("You can select only 2 interests!");
+          }
+        }
+
+        continueBtn.disabled = selected.length === 0;
+      });
+    });
+
+    continueBtn.addEventListener("click", () => {
+      localStorage.setItem("userDomains", JSON.stringify(selected));
+      window.location.href = "ikigai_questions.html"; // go to Ikigai Questions
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikigai Self-Discovery Questions</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin:0; padding:0;
+    background: linear-gradient(135deg,#141E30,#243B55);
+    color:#fff;
+}
+h1,h2 {text-align:center; margin:10px 0;}
+section {
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:40px 20px;
+    opacity:0;
+    transform:translateY(50px);
+    transition: all 0.8s ease-out;
+}
+section.visible {opacity:1; transform:translateY(0);}
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    border-radius:20px;
+    padding:30px;
+    max-width:600px; width:90%;
+    margin:20px auto;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+textarea, input[type=text], select {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:8px;
+    border:none;
+    background:rgba(255,255,255,0.2);
+    color:#fff;
+}
+textarea::placeholder, input::placeholder {color:#ddd;}
+button {padding:12px; width:100%; border-radius:10px; border:none; background:#00C9FF; color:black; font-weight:bold; cursor:pointer; margin-top:10px;}
+button:hover {background:#92FE9D;}
+.roadmap {display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-top:20px;}
+.roadmap-card {background:rgba(255,255,255,0.1); backdrop-filter:blur(15px); padding:15px; border-radius:15px; min-width:150px; text-align:center;}
+.skill-card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 15px auto;
+  max-width: 400px;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.skill-card a {
+  color: #00C9FF;
+  font-weight: bold;
+  text-decoration: none;
+}
+.skill-card a:hover { color: #92FE9D; }
+</style>
+</head>
+<body>
+
+<h1>Ikigai Self-Discovery</h1>
+<p style="text-align:center;" id="domainHeader"></p>
+
+<div id="questionContainer"></div>
+
+<section>
+<div class="card" id="resultsCard" style="display:none;">
+<h2>Your Ikigai Radar</h2>
+<canvas id="radarChart"></canvas>
+<h2>Goal Roadmap & Skill Gaps</h2>
+<div class="roadmap" id="roadmap"></div>
+<div id="recommendations"></div>
+<div id="insights"></div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Example questions per domain
+const questionsDB = {
+  "Technology":[
+    "Which tech projects excite you the most? (e.g., AI, web dev, robotics)",
+    "Which programming languages do you enjoy using?",
+    "What tech problem do you naturally solve easily?"
+  ],
+  "Medicine":[
+    "Which medical areas fascinate you? (e.g., surgery, research, therapy)",
+    "Do you enjoy patient care or research more?",
+    "Which healthcare challenges do you feel motivated to solve?"
+  ],
+  "Teaching":[
+    "What subjects or topics do you enjoy teaching?",
+    "Do you prefer teaching online or in-person?",
+    "Which age group do you enjoy guiding the most?"
+  ],
+  "Art":[
+    "Which art forms inspire you? (e.g., painting, digital, sculpting)",
+    "Do you prefer creating or curating art?",
+    "Which project would you spend hours on without noticing time?"
+  ],
+  "default":[
+    "What activity makes you lose track of time completely?",
+    "Which skill or hobby excites you most?",
+    "What problem do you naturally solve easily?"
+  ]
+};
+
+const userInterest = localStorage.getItem('userInterest') || "default";
+document.getElementById('domainHeader').innerText = "Your selected domain: " + userInterest;
+
+// Generate question sections dynamically
+const questionContainer = document.getElementById('questionContainer');
+const selectedQuestions = questionsDB[userInterest] || questionsDB["default"];
+selectedQuestions.forEach((q, i)=>{
+  const sec = document.createElement('section');
+  sec.innerHTML = `<div class="card">
+    <textarea id="q${i}" placeholder="${q}"></textarea>
+    <button onclick="nextQuestion(${i})">${i===selectedQuestions.length-1 ? "Submit" : "Next"}</button>
+  </div>`;
+  questionContainer.appendChild(sec);
+});
+const sections = document.querySelectorAll('section');
+
+// Scroll and show next question
+function nextQuestion(index){
+  const val = document.getElementById('q'+index).value;
+  if(!val){ alert("Please answer to continue."); return; }
+  if(index < selectedQuestions.length-1){
+    window.scrollTo({top:sections[index+1].offsetTop,behavior:'smooth'});
+  } else {
+    submitAnswers();
+  }
+}
+sections[0].classList.add('visible');
+window.addEventListener('scroll',()=>{
+  const scrollPos = window.scrollY + window.innerHeight*0.7;
+  sections.forEach(sec=>{ if(scrollPos>sec.offsetTop) sec.classList.add('visible'); });
+});
+
+// Submit answers to ChatGPT API
+async function submitAnswers(){
+  const answers = [];
+  for(let i=0;i<selectedQuestions.length;i++){
+    answers.push(document.getElementById('q'+i).value);
+  }
+  const prompt = `
+    Analyze these user answers for domain ${userInterest} and categorize into:
+    Passion, Strengths, Mission, Profession, Values.
+    Suggest missing skills for market relevance and roles they might enjoy.
+    Return as JSON: {
+      passionScore:0-10,
+      strengthsScore:0-10,
+      missionScore:0-10,
+      professionScore:0-10,
+      recommendedSkills: [],
+      recommendedRoles: [],
+      insights: []
+    }
+    User Answers: ${JSON.stringify(answers)}
+  `;
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer YOUR_API_KEY"
+      },
+      body: JSON.stringify({
+        model:"gpt-4o-mini",
+        messages:[{role:"user", content:prompt}],
+        temperature:0.7
+      })
+    });
+    const data = await response.json();
+    const result = JSON.parse(data.choices[0].message.content);
+    displayResults(result);
+  } catch(e){
+    alert("Error analyzing answers. Make sure your API key is valid.");
+    console.error(e);
+  }
+}
+
+// Display results
+function displayResults(result){
+  document.getElementById('resultsCard').style.display="block";
+  const ctx=document.getElementById("radarChart");
+  new Chart(ctx,{
+    type:"radar",
+    data:{
+      labels:["Passion","Strengths","Mission","Profession"],
+      datasets:[{
+        label:"Ikigai Scores",
+        data:[result.passionScore,result.strengthsScore,result.missionScore,result.professionScore],
+        backgroundColor:"rgba(0,200,255,0.3)",
+        borderColor:"#00C9FF",
+        pointBackgroundColor:"#fff"
+      }]
+    },
+    options:{scales:{r:{min:0,max:10}}}
+  });
+
+  // Roadmap cards
+  const roadmapDiv=document.getElementById("roadmap");
+  roadmapDiv.innerHTML="";
+  result.recommendedSkills.forEach(skill=>{
+    const card=document.createElement('div');
+    card.className='roadmap-card';
+    card.innerHTML=`<h4>Learn ${skill}</h4>`;
+    roadmapDiv.appendChild(card);
+  });
+
+  // Recommended skills + YouTube
+  document.getElementById("recommendations").innerHTML = result.recommendedSkills.map(skill=>{
+    const query = encodeURIComponent(skill + " tutorial");
+    return `<div class="skill-card"><h3>${skill}</h3><a href="https://www.youtube.com/results?search_query=${query}" target="_blank">Watch Tutorials</a></div>`;
+  }).join("");
+
+  // Insights
+  document.getElementById("insights").innerHTML="<h2>AI Insights</h2>"+result.insights.join("<br>");
+}
+</script>
+
+</body>
+</html>

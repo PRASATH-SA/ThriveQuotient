@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikigai AI + Market Fit</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin:0; padding:0;
+    background: linear-gradient(135deg,#141E30,#243B55);
+    color:#fff;
+    scroll-behavior: smooth;
+}
+h1,h2 {text-align:center; margin:10px 0;}
+section {min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:40px 20px; opacity:0; transform:translateY(50px); transition: all 0.8s ease-out;}
+section.visible {opacity:1; transform:translateY(0);}
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    border-radius:20px;
+    padding:30px;
+    max-width:700px; width:90%;
+    margin:20px auto;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+.tags {display:flex; flex-wrap:wrap; gap:5px; margin:10px 0;}
+.tag {background:rgba(255,255,255,0.2); padding:5px 10px; border-radius:8px; cursor:pointer;}
+.tag.selected {background:#00C9FF; color:black;}
+button {padding:12px; width:100%; border-radius:10px; border:none; background:#00C9FF; color:black; font-weight:bold; cursor:pointer;}
+button:hover {background:#92FE9D;}
+#chartDiv {width:100%; max-width:500px; margin:auto;}
+.result {margin-top:20px; background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; text-align:left;}
+input[type=range]{width:100%; margin:10px 0;}
+select {width:100%; padding:10px; margin:10px 0; border-radius:8px; border:none; background:rgba(255,255,255,0.2); color:#fff;}
+.skill-card {background: rgba(255,255,255,0.1); backdrop-filter: blur(15px); border-radius: 20px; padding: 20px; margin: 15px auto; max-width: 400px; text-align: left; box-shadow: 0 8px 32px rgba(0,0,0,0.25);}
+.skill-card a { color: #00C9FF; font-weight: bold; text-decoration: none;}
+.skill-card a:hover { color: #92FE9D; }
+.roadmap {display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-top:20px;}
+.roadmap-card {background:rgba(255,255,255,0.1); backdrop-filter:blur(15px); padding:15px; border-radius:15px; min-width:150px; text-align:center;}
+.question {margin-bottom:20px;}
+input[type=text]{width:100%; padding:8px; margin-top:5px; border-radius:8px; border:none; background:rgba(255,255,255,0.2); color:#fff;}
+</style>
+</head>
+<body>
+<video src="bg.mp4" style="position: fixed; width:100%; height: 100vh; object-fit: cover;" autoplay loop></video>
+
+
+<section class="visible">
+<div class="card">
+<h1>Thrive Quotient</h1>
+<button onclick="scrollNext(this)">Start Self-Discovery</button>
+</div>
+</section>
+
+<section>
+<div id="dynamicQuestionContainer"></div>
+</section>
+
+<section>
+<div class="card">
+<h2>Your Ikigai Radar</h2>
+<div id="chartDiv"><canvas id="radarChart"></canvas></div>
+<h2>Goal Roadmap & Skill Gaps</h2>
+<div class="roadmap" id="roadmap"></div>
+<div id="recommendations"></div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+let model;
+async function loadModel(){ model = await use.load(); console.log("TF.js Model Loaded"); }
+loadModel();
+
+// Scroll
+const sections=document.querySelectorAll('section');
+function scrollNext(btn){
+  const next = btn.closest('section').nextElementSibling;
+  if(next) window.scrollTo({top:next.offsetTop,behavior:'smooth'});
+}
+window.addEventListener('scroll',()=>{const scrollPos = window.scrollY + window.innerHeight*0.7; sections.forEach(sec=>{ if(scrollPos>sec.offsetTop) sec.classList.add('visible'); });});
+
+// Dynamic questions
+const questionSections = [
+  {
+    section: "🌟 Joy & Passion",
+    questions: [
+      { id:"love1", text:"What activities make you lose track of time completely?", tags:['Coding','Painting','Gaming','Teaching','Designing','Mentoring'] },
+      { id:"love2", text:"If money was not a concern, what would you spend your days doing?", tags:['Writing Stories','Traveling','Building Apps','Helping Others'] },
+      { id:"love3", text:"Which hobbies or childhood dreams still excite you today?", tags:['Robotics','Music','Drawing','Puzzles','Storytelling'] },
+      { id:"love4", text:"When was the last time you felt truly alive and energized? What were you doing?", input:true },
+      { id:"love5", text:"What topics or activities make you want to learn more, even without external push?", tags:['AI','Psychology','Fitness','Photography','Entrepreneurship'] }
+    ]
+  },
+  {
+    section:"💪 Strengths & Skills",
+    questions:[
+      { id:"skill1", text:"What do people often ask you for help with?", tags:['Fixing Tech Issues','Giving Advice','Organizing Events','Creative Ideas'] },
+      { id:"skill2", text:"Which tasks feel natural and easy to you, but difficult for others?", tags:['Explaining Concepts','Coding','Designing','Public Speaking','Analyzing Numbers'] },
+      { id:"skill3", text:"What achievements or compliments do you receive most often?", tags:['Great at Explaining','Creative','Reliable','Problem Solving'] },
+      { id:"skill4", text:"If you had to teach something right now, what could you confidently teach?", tags:['Programming','Playing Guitar','Cooking','Productivity Hacks'] },
+      { id:"skill5", text:"Which skills do you excel in without much practice or preparation?", tags:['Problem-Solving','Communication','Leadership','Memory Recall'] }
+    ]
+  }
+];
+
+let userAnswers = {};
+function renderSection(sectionIndex){
+  const container = document.getElementById('dynamicQuestionContainer');
+  container.innerHTML='';
+  const sectionData = questionSections[sectionIndex];
+
+  const card = document.createElement('div'); card.className='card';
+  const h2 = document.createElement('h2'); h2.innerText=sectionData.section; card.appendChild(h2);
+
+  sectionData.questions.forEach(q=>{
+    const qDiv = document.createElement('div'); qDiv.className='question';
+    const p = document.createElement('p'); p.innerText=q.text; qDiv.appendChild(p);
+
+    if(q.tags){
+      const tagDiv = document.createElement('div'); tagDiv.className='tags';
+      q.tags.forEach(tag=>{
+        const t = document.createElement('div'); t.className='tag'; t.innerText=tag;
+        t.onclick=()=> t.classList.toggle('selected');
+        tagDiv.appendChild(t);
+      });
+      qDiv.appendChild(tagDiv);
+    }
+
+    if(q.input){
+      const inp = document.createElement('input'); inp.type='text'; inp.id=q.id; inp.placeholder='Type your answer...';
+      qDiv.appendChild(inp);
+    }
+    card.appendChild(qDiv);
+  });
+
+  const btn = document.createElement('button'); btn.innerText='Next';
+  btn.onclick = async ()=>{
+    sectionData.questions.forEach(q=>{
+      if(q.tags) userAnswers[q.id] = [...card.querySelectorAll('.tag.selected')].map(t=>t.innerText);
+      else if(q.input) userAnswers[q.id] = document.getElementById(q.id).value;
+    });
+
+    const nextIndex = sectionIndex+1;
+    if(nextIndex<questionSections.length) renderSection(nextIndex);
+    else await analyze(); // call final analysis
+  };
+  card.appendChild(btn);
+  container.appendChild(card);
+}
+
+// Start first section
+renderSection(0);
+
+// Market skills fallback
+async function fetchMarketSkills() {
+  const query = "stars:>1000"; 
+  const url = `https://api.github.com/search/repositories?q=${query}&sort=stars&order=desc&per_page=10`;
+  try { const res = await fetch(url); const data = await res.json(); return data.items.map(repo => repo.name); }
+  catch { return ["React","Node.js","AI","Python","Machine Learning"]; }
+}
+
+// Generate YouTube links
+function generateYouTubeLinks(skills){
+  return skills.map(skill=>{
+    const query=encodeURIComponent(skill+" tutorial");
+    return `<div class="skill-card"><h3>${skill}</h3><a href="https://www.youtube.com/results?search_query=${query}" target="_blank">Watch Tutorials</a></div>`;
+  }).join("");
+}
+
+// Cosine similarity
+function cosineSimilarity(vecA,vecB){
+  const dot = tf.tidy(()=>tf.sum(tf.mul(vecA,vecB)).arraySync());
+  const normA = tf.tidy(()=>tf.norm(vecA).arraySync());
+  const normB = tf.tidy(()=>tf.norm(vecB).arraySync());
+  return dot/(normA*normB);
+}
+
+// Analyze
+async function analyze(){
+  if(!model){ alert("Model loading..."); return; }
+  const rec=document.getElementById("recommendations");
+  const roadmapDiv=document.getElementById("roadmap");
+
+  const love = Object.keys(userAnswers).filter(k=>k.startsWith('love')).map(k=>userAnswers[k]).flat();
+  const skills = Object.keys(userAnswers).filter(k=>k.startsWith('skill')).map(k=>userAnswers[k]).flat();
+
+  const marketSkills = await fetchMarketSkills();
+  const sentences = [...love, ...skills, ...marketSkills];
+  const embeddings = await model.embed(sentences);
+
+  const userVecs = embeddings.slice([0,0],[love.length+skills.length,-1]);
+  const marketVecs = embeddings.slice([love.length+skills.length,0],[-1,-1]);
+
+  function getMaxSim(userVec){
+    let maxSim=0;
+    for(let i=0;i<marketVecs.shape[0];i++){
+      const sim=cosineSimilarity(userVec, marketVecs.slice([i,0],[1,-1]));
+      if(sim>maxSim) maxSim=sim;
+    }
+    return maxSim;
+  }
+
+  const vocationScore=Math.round(getMaxSim(userVecs)*10);
+  const passionScore=7; 
+  const missionScore=7;
+  const professionScore=7;
+
+  // Radar chart
+  const ctx=document.getElementById("radarChart");
+  new Chart(ctx,{type:'radar',data:{labels:['Passion','Mission','Vocation','Profession'],datasets:[{label:"Ikigai Scores",data:[passionScore,missionScore,vocationScore,professionScore],backgroundColor:'rgba(0,200,255,0.3)',borderColor:'#00C9FF',pointBackgroundColor:'#fff'}]},options:{scales:{r:{min:0,max:10}}}});
+
+  // Missing skills
+  const selectedSkills = skills;
+  const missingSkills = marketSkills.filter(skill=>!selectedSkills.includes(skill)).slice(0,5);
+
+  roadmapDiv.innerHTML="";
+  missingSkills.forEach(skill=>{
+    const card=document.createElement('div'); card.className='roadmap-card';
+    card.innerHTML=`<h4>Learn ${skill}</h4><p>Gap Skill</p>`;
+    roadmapDiv.appendChild(card);
+  });
+
+  rec.innerHTML="<h2>Recommended Skills + Tutorials</h2>"+generateYouTubeLinks(missingSkills);
+  const chartSection=document.getElementById("chartDiv").closest('section');
+  window.scrollTo({top: chartSection.offsetTop, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

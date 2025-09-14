@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Ikigai Questions</title>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  margin:0; padding:0; font-family:Arial, sans-serif;
+  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  color:#fff;
+}
+h1,h2,h3 {text-align:center; margin:10px 0; text-shadow:0 0 8px #00f6ff;}
+.card {
+  background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
+  border-radius: 20px; border:2px solid #00f6ff;
+  box-shadow: 0 0 20px #00f6ff, 0 0 40px #00f6ff inset;
+  padding: 20px; margin: 20px auto; max-width:500px;
+  transition: all 0.3s ease;
+}
+.card:hover { box-shadow: 0 0 30px #ff00ff,0 0 50px #00ffea inset; transform:translateY(-3px);}
+textarea {width:100%; margin-top:10px; padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.1); color:#fff; resize:none;}
+button {padding:12px; width:100%; border-radius:10px; border:none; background:#00C9FF; color:black; font-weight:bold; cursor:pointer; margin-top:10px;}
+button:hover {background:#92FE9D;}
+.tag {display:inline-block; margin:5px; padding:5px 10px; border-radius:15px; background: rgba(0,246,255,0.2); cursor:pointer; transition:0.3s;}
+.tag.selected {background:#00f6ff; color:#000; font-weight:bold;}
+#radarChart {max-width:450px; margin:20px auto; display:block; border-radius:20px; padding:10px; background: rgba(255,255,255,0.05); border: 2px solid #00f6ff; box-shadow: 0 0 20px #00f6ff;}
+.venn-map {position:relative; width:400px; height:400px; margin:20px auto;}
+.venn-map .circle {position:absolute; width:200px; height:200px; border-radius:50%; opacity:0.3; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; border:2px solid #ff00ff; box-shadow:0 0 15px #ff00ff inset,0 0 20px #00f6ff;}
+.venn-pass {background:rgba(255,0,0,0.3); top:50px; left:100px;}
+.venn-str {background:rgba(0,255,0,0.3); top:50px; left:150px;}
+</style>
+</head>
+<body>
+<h1>🌀 Deep Ikigai Questions</h1>
+<div id="questionContainer"></div>
+
+<div id="results" style="display:none;">
+  <h2>✨ Your Ikigai Summary</h2>
+  <canvas id="radarChart"></canvas>
+  <div class="venn-map">
+    <div class="circle venn-pass">Passion</div>
+    <div class="circle venn-str">Strengths</div>
+  </div>
+  <div id="summary"></div>
+</div>
+
+<script>
+let step=0;
+let answers=[];
+let selectedDomains=["Technology 💻","Art 🎨"]; // Example selected, dynamic in production
+let allQuestions = [];
+
+// Deep Questions
+const passionQuestions = [
+  {q:"What activities make you lose track of time completely?", examples:"coding, painting, gaming, teaching, designing, mentoring"},
+  {q:"If money was not a concern, what would you spend your days doing?", examples:"writing stories, traveling, building apps, helping others"},
+  {q:"Which hobbies or childhood dreams still excite you today?", examples:"robotics, music, drawing, puzzles, storytelling"},
+  {q:"When was the last time you felt truly alive and energized? What were you doing?", examples:"solving problems, performing, exploring nature, collaborating on projects"},
+  {q:"What topics or activities make you want to learn more, even without external push?", examples:"AI, psychology, fitness, photography, entrepreneurship"}
+];
+
+const strengthQuestions = [
+  {q:"What do people often ask you for help with?", examples:"fixing tech issues, giving advice, organizing events, creative ideas"},
+  {q:"Which tasks feel natural and easy to you, but difficult for others?", examples:"explaining concepts, coding, designing, public speaking, analyzing numbers"},
+  {q:"What achievements or compliments do you receive most often?", examples:"You're great at explaining, You're so creative, You're reliable"},
+  {q:"If you had to teach something right now, what could you confidently teach?", examples:"programming, playing guitar, cooking, productivity hacks"},
+  {q:"Which skills do you excel in without much practice or preparation?", examples:"problem-solving, communication, leadership, memory recall"}
+];
+
+// Combine all questions dynamically based on domains
+selectedDomains.forEach(d=>{
+  allQuestions.push(...passionQuestions.map(p=>({...p,type:"passion"})));
+  allQuestions.push(...strengthQuestions.map(s=>({...s,type:"strength"})));
+});
+
+function askDynamic(index=0){
+  if(index>=allQuestions.length){ showResults(); return; }
+  const q = allQuestions[index];
+  $("#questionContainer").html(`
+    <div class="card">
+      <h3>${q.q}</h3>
+      <p>Examples: ${q.examples}</p>
+      <textarea id="answer" placeholder="Type your answer here..."></textarea>
+      <button id="nextBtn">${index<allQuestions.length-1?"Next":"Submit"}</button>
+    </div>
+  `);
+  $("#nextBtn").click(()=>{
+    const val=$("#answer").val();
+    if(!val){ alert("Please answer"); return; }
+    answers.push({question:q.q, answer:val, type:q.type});
+    askDynamic(index+1);
+  });
+}
+
+function showResults(){
+  $("#questionContainer").hide();
+  $("#results").show();
+
+  const passionScore=answers.filter(a=>a.type==="passion").length*2;
+  const strengthsScore=answers.filter(a=>a.type==="strength").length*2;
+
+  const ctx=document.getElementById("radarChart");
+  new Chart(ctx,{
+    type:"radar",
+    data:{
+      labels:["Passion","Strengths"],
+      datasets:[{
+        label:"Ikigai Score",
+        data:[passionScore,strengthsScore],
+        backgroundColor:"rgba(0,246,255,0.3)",
+        borderColor:"#00f6ff",
+        pointBackgroundColor:"#fff"
+      }]
+    },
+    options:{scales:{r:{min:0,max:10}}}
+  });
+
+  const summary=$("#summary");
+  summary.append("<h3>Potential Skill Gaps & Recommendations</h3>");
+  summary.append("<div class='roadmap-card'>Skill: JavaScript</div>");
+  summary.append("<div class='recommend-card'><a href='https://www.youtube.com/watch?v=W6NZfCO5SIk' target='_blank'>▶ JS Tutorial for Beginners</a></div>");
+}
+
+$(document).ready(()=>{ askDynamic(); });
+</script>
+</body>
+</html>

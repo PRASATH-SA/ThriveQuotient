@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ikigai Self-Discovery + Market Fit</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin:0; padding:0;
+    background: linear-gradient(135deg,#141E30,#243B55);
+    color:#fff;
+    scroll-behavior: smooth;
+}
+h1,h2 {text-align:center; margin:10px 0;}
+section {
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    justify-content:center; align-items:center;
+    padding:40px 20px;
+    opacity:0;
+    transform:translateY(50px);
+    transition: all 0.8s ease-out;
+}
+section.visible {opacity:1; transform:translateY(0);}
+.card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(15px);
+    border-radius:20px;
+    padding:30px;
+    max-width:600px; width:90%;
+    margin:20px auto;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);
+}
+textarea, input[type=text], select {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:8px;
+    border:none;
+    background:rgba(255,255,255,0.2);
+    color:#fff;
+}
+textarea::placeholder, input::placeholder {color:#ddd;}
+button {padding:12px; width:100%; border-radius:10px; border:none; background:#00C9FF; color:black; font-weight:bold; cursor:pointer; margin-top:10px;}
+button:hover {background:#92FE9D;}
+input[type=range]{width:100%; margin:10px 0;}
+.skill-card {
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 15px auto;
+  max-width: 400px;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+}
+.skill-card a {
+  color: #00C9FF;
+  font-weight: bold;
+  text-decoration: none;
+}
+.skill-card a:hover { color: #92FE9D; }
+.roadmap {display:flex; flex-wrap:wrap; gap:15px; justify-content:center; margin-top:20px;}
+.roadmap-card {background:rgba(255,255,255,0.1); backdrop-filter:blur(15px); padding:15px; border-radius:15px; min-width:150px; text-align:center;}
+</style>
+</head>
+<body>
+
+<h1>Ikigai Self-Discovery + Market Fit</h1>
+
+<!-- Joy & Passion -->
+<section class="visible">
+<div class="card">
+<h2>🌟 Joy & Passion</h2>
+<textarea id="q1" placeholder="What activity makes you lose track of time completely? (e.g., coding, painting, teaching)"></textarea>
+<textarea id="q2" placeholder="If money wasn’t a concern, what would you spend your days doing? (e.g., traveling, writing, mentoring)"></textarea>
+<textarea id="q3" placeholder="Which childhood hobby or dream still excites you today? (e.g., music, drawing, robotics)"></textarea>
+<textarea id="q4" placeholder="When was the last time you felt truly alive and happy? What were you doing? (e.g., helping others, solving problems, exploring nature)"></textarea>
+<textarea id="q5" placeholder="Which activities leave you feeling refreshed instead of tired? (e.g., learning, exercising, teaching)"></textarea>
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Strengths -->
+<section>
+<div class="card">
+<h2>💪 Strengths</h2>
+<textarea id="q6" placeholder="What’s something you do that feels easy to you but hard for others? (e.g., explaining concepts, problem-solving)"></textarea>
+<textarea id="q7" placeholder="Which skills do people usually compliment you for? (e.g., coding, design, leadership)"></textarea>
+<textarea id="q8" placeholder="If you had to teach a class tomorrow, what topic would you confidently teach? (e.g., JavaScript, drawing, entrepreneurship)"></textarea>
+<textarea id="q9" placeholder="What’s a problem you naturally know how to solve? (e.g., debugging code, organizing events)"></textarea>
+<textarea id="q10" placeholder="Which of your achievements are you most proud of? (e.g., won a hackathon, built a project)"></textarea>
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Contribution & Impact -->
+<section>
+<div class="card">
+<h2>🌍 Contribution & Impact</h2>
+<textarea id="q11" placeholder="What kind of problems in the world break your heart the most? (e.g., education, environment, inequality)"></textarea>
+<textarea id="q12" placeholder="Who do you feel drawn to help the most? (e.g., children, elderly, students, entrepreneurs)"></textarea>
+<textarea id="q13" placeholder="What’s one cause you would volunteer for, even without recognition? (e.g., teaching, social welfare)"></textarea>
+<textarea id="q14" placeholder="If you could improve one thing in your community or workplace, what would it be? (e.g., environment, tech access)"></textarea>
+<textarea id="q15" placeholder="When have you felt like your actions made a real difference? (e.g., mentoring, coding for cause)"></textarea>
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Value & Career -->
+<section>
+<div class="card">
+<h2>💰 Value & Career</h2>
+<textarea id="q16" placeholder="What skill do you have that people would pay you for today? (e.g., web development, teaching, photography)"></textarea>
+<textarea id="q17" placeholder="If someone gave you ₹10,000 to work on any project, what would you choose? (e.g., app development, mentoring, content creation)"></textarea>
+<textarea id="q18" placeholder="Which of your hobbies has the potential to be turned into a career or side income? (e.g., gaming, writing, designing)"></textarea>
+<textarea id="q19" placeholder="What job roles or industries naturally attract your curiosity? (e.g., AI, design, teaching)"></textarea>
+<textarea id="q20" placeholder="What’s one future skill you’d be excited to learn that also has market demand? (e.g., AI, web3, data science)"></textarea>
+<button onclick="scrollNext(this)">Next</button>
+</div>
+</section>
+
+<!-- Values & Lifestyle -->
+<section>
+<div class="card">
+<h2>🧭 Values & Lifestyle</h2>
+<textarea id="q21" placeholder="Which 3 words describe the kind of life you want to live? (e.g., free, creative, impactful)"></textarea>
+<textarea id="q22" placeholder="What values guide your decisions, even when it’s hard? (e.g., honesty, growth, curiosity)"></textarea>
+<textarea id="q23" placeholder="What kind of people do you love being around? (e.g., creative, positive, ambitious)"></textarea>
+<textarea id="q24" placeholder="What’s more important to you: stability, freedom, recognition, or growth?"></textarea>
+<textarea id="q25" placeholder="Imagine yourself at 80 years old—what do you want to look back on and feel proud of?"></textarea>
+<button onclick="submitAnswers()">Analyze Ikigai</button>
+</div>
+</section>
+
+<!-- Results -->
+<section>
+<div class="card">
+<h2>Your Ikigai Radar</h2>
+<canvas id="radarChart"></canvas>
+<h2>Goal Roadmap & Skill Gaps</h2>
+<div class="roadmap" id="roadmap"></div>
+<div id="recommendations"></div>
+<div id="insights"></div>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Scroll fade-in
+const sections=document.querySelectorAll('section');
+function scrollNext(btn){
+  const next = btn.closest('section').nextElementSibling;
+  if(next) window.scrollTo({top:next.offsetTop,behavior:'smooth'});
+}
+window.addEventListener('scroll',()=>{
+  const scrollPos = window.scrollY + window.innerHeight*0.7;
+  sections.forEach(sec=>{ if(scrollPos>sec.offsetTop) sec.classList.add('visible'); });
+});
+
+// Generate YouTube links
+function generateYouTubeLinks(skills){
+  return skills.map(skill=>{
+    const query=encodeURIComponent(skill+" tutorial");
+    return `<div class="skill-card"><h3>${skill}</h3><a href="https://www.youtube.com/results?search_query=${query}" target="_blank">Watch Tutorials</a></div>`;
+  }).join("");
+}
+
+// Submit answers to ChatGPT API
+async function submitAnswers(){
+  const answers=[];
+  for(let i=1;i<=25;i++){
+    answers.push(document.getElementById('q'+i).value);
+  }
+  const prompt = `
+  Analyze these user answers and categorize them into:
+  Passion, Strengths, Mission, Profession, Values.
+  Identify patterns, suggest missing skills for market relevance, 
+  and recommend roles or hobbies the user might enjoy. 
+  Return as JSON: {
+    passionScore:0-10,
+    strengthsScore:0-10,
+    missionScore:0-10,
+    professionScore:0-10,
+    recommendedSkills: [],
+    recommendedRoles: [],
+    insights: []
+  }
+  User Answers: ${JSON.stringify(answers)}
+  `;
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer YOUR_API_KEY"
+      },
+      body: JSON.stringify({
+        model:"gpt-4o-mini",
+        messages:[{role:"user", content:prompt}],
+        temperature:0.7
+      })
+    });
+    const data = await response.json();
+    const result = JSON.parse(data.choices[0].message.content);
+    displayResults(result);
+  } catch(e){
+    alert("Error analyzing answers. Make sure your API key is valid.");
+    console.error(e);
+  }
+}
+
+// Display results
+function displayResults(result){
+  // Radar chart
+  const ctx=document.getElementById("radarChart");
+  new Chart(ctx,{
+    type:"radar",
+    data:{
+      labels:["Passion","Strengths","Mission","Profession"],
+      datasets:[{
+        label:"Ikigai Scores",
+        data:[result.passionScore,result.strengthsScore,result.missionScore,result.professionScore],
+        backgroundColor:"rgba(0,200,255,0.3)",
+        borderColor:"#00C9FF",
+        pointBackgroundColor:"#fff"
+      }]
+    },
+    options:{scales:{r:{min:0,max:10}}}
+  });
+
+  // Roadmap cards
+  const roadmapDiv=document.getElementById("roadmap");
+  roadmapDiv.innerHTML="";
+  result.recommendedSkills.forEach(skill=>{
+    const card=document.createElement('div');
+    card.className='roadmap-card';
+    card.innerHTML=`<h4>Learn ${skill}</h4>`;
+    roadmapDiv.appendChild(card);
+  });
+
+  // Recommended skills + YouTube
+  document.getElementById("recommendations").innerHTML = generateYouTubeLinks(result.recommendedSkills);
+
+  // Insights
+  document.getElementById("insights").innerHTML="<h2>AI Insights</h2>"+result.insights.join("<br>");
+}
+</script>
+
+</body>
+</html>
