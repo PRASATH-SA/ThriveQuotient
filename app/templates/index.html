@@ -1,0 +1,200 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Thrive Quotient</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg1:#0f172a;
+      --bg2:#071021;
+      --accent:#06b6d4;
+      --muted:#9fb0d7;
+      --card: rgba(255,255,255,0.03);
+    }
+    body{
+      margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,var(--bg1),#0b1220 40%,#081226 100%);color:#e6eef8;
+      min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px;
+    }
+    .container{max-width:1100px;width:100%;display:grid;grid-template-columns:220px 1fr 220px;gap:18px}
+    .aside{background:var(--card);padding:14px;border-radius:12px;position:sticky;top:28px;height:fit-content}
+    .main{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px}
+    .chip{display:inline-block;padding:10px 14px;margin:6px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.04);cursor:pointer}
+    .chip.sel{background:linear-gradient(90deg,#06b6d4,#0ea5a3);color:#042b2a;border:none}
+    input, textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:#012;cursor:pointer}
+    h1{margin:0 0 8px 0}
+    .small{font-size:13px;color:var(--muted)}
+    .question{margin-bottom:12px}
+    label{font-weight:600;margin-bottom:6px;display:block}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="aside">
+      <h3>Ikigai — Quick Facts</h3>
+      <ul>
+        {% for f in left_facts %}
+        <li class="small" style="margin-bottom:8px">{{ f }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <main class="main">
+      <h1>Thrive Quotient`</h1>
+      <p class="small">Select up to <strong>2 domains</strong>, answer short prompts, get a personalized roadmap and course recommendations.</p>
+
+      <div style="margin-top:12px;padding:12px;background:rgba(255,255,255,0.01);border-radius:10px">
+        <label>Your name</label>
+        <input id="name" placeholder="Optional — helps label your PDF" />
+        <label style="margin-top:10px">Email</label>
+        <input id="email" placeholder="Optional" />
+      </div>
+
+      <section style="margin-top:14px;padding:12px;background:rgba(255,255,255,0.015);border-radius:10px">
+        <h3>Select domains</h3>
+        <div id="chips"></div>
+        <div style="margin-top:10px"><button id="startBtn">Start</button></div>
+      </section>
+
+      <section id="qaArea" style="display:none;margin-top:14px;padding:12px;background:rgba(255,255,255,0.01);border-radius:10px">
+        <h3>Answer prompts</h3>
+        <form id="qaForm">
+          <div id="questionsList"></div>
+          <div style="margin-top:8px"><button type="submit">Analyze & Generate Roadmap</button></div>
+        </form>
+      </section>
+
+    </main>
+
+    <div class="aside">
+      <h3>Why Ikigai matters</h3>
+      <ul>
+        {% for f in right_facts %}
+        <li class="small" style="margin-bottom:8px">{{ f }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+<script>
+const domains = {{ domains | tojson }};
+const chipsDiv = document.getElementById('chips');
+let selected = [];
+const chipEls = [];
+
+domains.forEach(d=>{
+  const el = document.createElement('div');
+  el.className = 'chip';
+  el.innerText = d;
+  el.onclick = ()=>{
+    if(el.classList.contains('sel')){
+      el.classList.remove('sel');
+      selected = selected.filter(x=>x!==d);
+    } else {
+      if(selected.length >= 2){ alert("Maximum 2 domains"); return; }
+      el.classList.add('sel');
+      selected.push(d);
+    }
+  }
+  chipsDiv.appendChild(el);
+  chipEls.push(el);
+});
+
+document.getElementById('startBtn').addEventListener('click', async ()=>{
+  if(selected.length===0){ alert("Select at least one domain"); return; }
+  // call /start_session to get first 2 questions per domain
+  const res = await fetch('/start_session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domains:selected})});
+  const data = await res.json();
+  if(data.error){ alert(data.error); return; }
+  const questions = data.questions;
+  // render questions (initial 2 per domain). We'll request followup per domain after first two answers are filled.
+  const qList = document.getElementById('questionsList'); qList.innerHTML = '';
+  // group by domain
+  const byDomain = {};
+  questions.forEach((q)=> { if(!byDomain[q.domain]) byDomain[q.domain]=[]; byDomain[q.domain].push(q.prompt); });
+  window.questionsState = { domains: selected, byDomain: {}, answers: {} };
+  selected.forEach(d=>{
+    const header = document.createElement('h4'); header.innerText = d; qList.appendChild(header);
+    window.questionsState.byDomain[d] = [];
+    window.questionsState.answers[d] = [];
+    const prompts = byDomain[d] || [];
+    prompts.forEach((p, idx)=>{
+      const qdiv = document.createElement('div'); qdiv.className='question';
+      qdiv.innerHTML = `<label>${p}</label><textarea data-domain="${d}" data-step="${idx}" placeholder="Write your answer..."></textarea>`;
+      qList.appendChild(qdiv);
+    });
+    // add a button to request followup once the first two are answered
+    const fb = document.createElement('div'); fb.style.marginBottom='12px';
+    fb.innerHTML = `<button type="button" data-domain="${d}" class="followBtn">Get a quick follow-up</button> <span class="small" style="margin-left:8px;color:#9fb0d7">(After first 2 answers)</span>`;
+    qList.appendChild(fb);
+  });
+  document.getElementById('qaArea').style.display = 'block';
+
+  // follow-up handlers
+  document.querySelectorAll('.followBtn').forEach(btn=>{
+    btn.onclick = async (ev)=>{
+      const d = btn.dataset.domain;
+      // collect first two textarea values for domain d
+      const tareas = Array.from(document.querySelectorAll(`textarea[data-domain="${d}"]`)).slice(0,2);
+      const answers_two = tareas.map(t=>t.value.trim()).filter(x=>x.length>0);
+      if(answers_two.length < 1){ alert("Please answer the first question(s) before requesting follow-up."); return; }
+      // call /followup
+      const r = await fetch('/followup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({domain:d, answers_two})});
+      const jd = await r.json();
+      if(jd.error){ alert(jd.error); return; }
+      // insert followup field after the two initial questions
+      const insertAfter = tareas[tareas.length-1].parentNode;
+      // create a follow-up textarea if not exists already
+      if(document.querySelector(`textarea[data-domain="${d}"][data-step="followup"]`)){
+        alert("Follow-up already added for this domain.");
+        return;
+      }
+      const followDiv = document.createElement('div');
+      followDiv.className = 'question';
+      followDiv.innerHTML = `<label>${jd.followup}</label><textarea data-domain="${d}" data-step="followup" placeholder="Answer the follow-up..."></textarea><div class="small">Detected keyword: ${jd.label} (score ${jd.sim.toFixed(2)})</div>`;
+      insertAfter.parentNode.insertBefore(followDiv, insertAfter.nextSibling);
+    }
+  });
+
+  // also append the remaining canonical domain questions (3 more) below each domain
+  selected.forEach(d=>{
+    const morePrompts = {{ DOMAIN_QUESTIONS | tojson }}[d]; // will copy from server template at render time
+    // after first two and followup, we add the remaining 3 (index 2..4)
+    const startIndex = 2;
+    const container = document.getElementById('questionsList');
+    // find the last textarea for domain to append after — simple approach: append new nodes at end of domain block
+    const idx = selected.indexOf(d);
+    // append the 3 more prompts directly
+    for(let i=startIndex;i<Math.min(morePrompts.length,5);i++){
+      const qdiv = document.createElement('div'); qdiv.className='question';
+      qdiv.innerHTML = `<label>${morePrompts[i]}</label><textarea data-domain="${d}" data-step="${i}" placeholder="Write your answer..."></textarea>`;
+      container.appendChild(qdiv);
+    }
+  });
+
+});
+
+document.getElementById('qaForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  // collect all textarea answers grouped by domain
+  const allAreas = Array.from(document.querySelectorAll('textarea'));
+  const answersByDomain = {};
+  allAreas.forEach(t=>{
+    const d = t.dataset.domain;
+    if(!answersByDomain[d]) answersByDomain[d]=[];
+    answersByDomain[d].push(t.value.trim());
+  });
+  // submit to analyze
+  const payload = { name, email, domains: selected, answers: answersByDomain };
+  const res = await fetch('/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const jd = await res.json();
+  if(jd.error){ alert(jd.error); return; }
+  window.location = `/profile/${jd.profile_id}`;
+});
+</script>
+</body>
+</html>

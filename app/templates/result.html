@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Ikigai — Results</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#071021,#081226);color:#e6eef8;padding:24px}
+    .wrap{max-width:1000px;margin:0 auto}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px;margin-bottom:14px}
+    a.button{background:#06b6d4;padding:10px 12px;border-radius:10px;color:#012;text-decoration:none}
+    .small{font-size:13px;color:#9fb0d7}
+    .course{display:block;margin-bottom:8px;color:#bdeef8;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Results — {{ profile.name or "Anonymous" }}</h1>
+    <p class="small">Domains: {{ profile.domains | join(', ') }} • Created: {{ profile.created_at }}</p>
+
+    <div class="card">
+      <h3>Radar — Ikigai axes</h3>
+      <canvas id="radar" width="600" height="360"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Top Segments</h3>
+      {% if profile.result.segments|length == 0 %}
+        <p class="small">No strong signals — try more detailed answers.</p>
+      {% else %}
+        {% for s in profile.result.segments %}
+          <div style="margin-bottom:8px">
+            <strong>{{ s.segment }}</strong> — passion {{ (s.passion_score*100)|round }} / profession {{ (s.profession_score*100)|round }}
+            <div class="small">keywords: {{ s.keywords | join(', ') }}</div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Top segment recommendations — {{ profile.result.top_segment }}</h3>
+      {% for c in profile.result.courses %}
+        <a class="course" href="{{ c.url }}" target="_blank">• {{ c.title }}</a>
+      {% endfor %}
+    </div>
+
+    <div class="card">
+      <h3>Roadmap (summary)</h3>
+      {% for step in profile.result.roadmap.steps %}
+        <div style="margin-bottom:10px"><strong>{{ step.title }}</strong><div class="small">{{ step.details }} • {{ step.duration }}</div></div>
+      {% endfor %}
+      <a class="button" href="/download_pdf/{{ profile.id }}">Download PDF roadmap</a>
+    </div>
+  </div>
+
+<script>
+const radar = {{ profile.result.radar | tojson }};
+const labels = Object.keys(radar);
+const data = labels.map(l => radar[l]);
+const ctx = document.getElementById('radar').getContext('2d');
+new Chart(ctx, {
+  type:'radar',
+  data:{
+    labels: labels,
+    datasets:[{ label:'Ikigai profile (0-100)', data: data, fill:true, borderWidth:2 }]
+  },
+  options:{ scales:{ r:{ beginAtZero:true, suggestedMax:100 } } }
+});
+</script>
+</body>
+</html>
